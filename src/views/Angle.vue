@@ -1,13 +1,13 @@
 <template>
     <div class="position-relative cos-bg-dark">
-        <header><Header :navTitle="'Measurement'"></Header></header>
+        <header><Header :navTitle="'Angle'"></Header></header>
         <div class="content">
             <div class="p-4 position-absolute cos-color-light">
                 <h5 class="text-left">Before Starting</h5>
                 <p class="text-left">1. Click the AR button at the bottom of the page</p>
                 <p class="text-left">2. Waiting until there is a reticle on screen</p>
-                <p class="text-left">3. Tap on the screen to start / stop measurement</p>
-                <p class="text-left">4. The size will appears in the upper left corner of the screen, in the order of length, width, and height</p>
+                <p class="text-left">3. Tap on the screen to draw two lines</p>
+                <p class="text-left">4. The angle will appears in the upper left corner of the screen</p>
                 <hr/>
                 <p class="text-left cos-color-danger">This function is under the support of <strong>Google Play Services for AR</strong>, you may need to install first.</p>
                 <p class="text-left cos-color-danger">If there is no AR button downside, your phone may not support this function.</p>
@@ -17,26 +17,23 @@
             <div id="info-overlay">
                 <b-list-group id="info-card" class="float-right mr-5">
                     <b-list-group-item class="d-flex justify-content-between align-items-center">
-                        <strong>Sizer Measurement</strong>
+                        <strong>Sizer Included Angle</strong>
                     </b-list-group-item>
 
                     <b-list-group-item class="d-flex justify-content-between align-items-center">
-                        length<b-badge variant="primary" pill>{{m.length}}cm</b-badge>
+                        Line1<b-badge variant="primary" pill>{{distanceList[0]}} cm</b-badge>
                     </b-list-group-item>
 
                     <b-list-group-item class="d-flex justify-content-between align-items-center">
-                        width<b-badge variant="primary" pill>{{m.width}}cm</b-badge>
+                        Line2<b-badge variant="primary" pill>{{distanceList[1]}} cm</b-badge>
                     </b-list-group-item>
 
                     <b-list-group-item class="d-flex justify-content-between align-items-center">
-                        height<b-badge variant="primary" pill>{{m.height}}cm</b-badge>
+                        Angle<b-badge variant="primary" pill>{{angle}} deg</b-badge>
                     </b-list-group-item>
 
                     <b-list-group-item class="d-flex align-items-center">
-                        <!-- <b-button variant="secondary" block size="sm" @click="saveHistory()">Save</b-button> -->
-                        <b-overlay :show="loading" rounded opacity="0.6" spinner-small spinner-variant="secondary" class="d-inline-block w-100">
-                            <b-button :disabled="loading" variant="secondary" block size="sm" class="cos-bg-lightblue cos-color-gray border-0 w-100" @click="saveHistory()">Save</b-button>
-                        </b-overlay>
+                        <b-button variant="danger" block size="sm" id="exit-scene">Exit</b-button>
                     </b-list-group-item>
 
                 </b-list-group>
@@ -46,8 +43,6 @@
                     <svg v-show="hasPlain" class="mr-1 mt-1" t="1606139382881" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3017" width="16" height="16"><path d="M502.690909 502.690909m-502.690909 0a502.690909 502.690909 0 1 0 1005.381818 0 502.690909 502.690909 0 1 0-1005.381818 0Z" fill="#65CB7A" p-id="3018"></path><path d="M837.818182 279.272727c-27.927273-27.927273-68.266667-27.927273-96.19394 0L406.49697 617.50303l-142.739394-145.842424c-27.927273-24.824242-71.369697-24.824242-96.19394 3.10303-24.824242 24.824242-24.824242 68.266667 0 93.090909l189.284849 192.387879c27.927273 27.927273 68.266667 27.927273 96.193939 0L837.818182 375.466667c24.824242-24.824242 24.824242-68.266667 0-96.19394z" fill="#FFFFFF" p-id="3019"></path></svg>
                     {{message}}
                 </div>
-
-                <b-button variant="danger" class="position-absolute my-4 mx-2 px-3 py-2" id="exit-scene">Exit</b-button>
             </div>
 
             <!-- camera scene -->
@@ -88,7 +83,10 @@ export default {
             reticle: null, // three.js reticle object
             hitTestSource: null,
             hitTestSourceRequested: false,
+
             pointList: [], // store two select points
+            distanceList: [], // store two line length
+            vectorList: [], // strore two line vector
             line: null, // current line
 
             // UI related
@@ -96,13 +94,8 @@ export default {
             message: "Detecting plane...",
             hasPlain: false,
             
-            // size information
-            m: {
-                length: 0,
-                width: 0,
-                height: 0
-            },
-            sizeLength: 0
+            // measurement
+            angle: 0,
         }
     },
 
@@ -166,44 +159,6 @@ export default {
             });
         },
 
-        storeSize(cm){
-            if(this.sizeLength==0){
-                this.m.length=cm;
-            }else if(this.sizeLength==1){
-                this.m.width=cm;
-            }else if(this.sizeLength==2){
-                this.m.height=cm;
-            }else if(this.sizeLength>=3){
-                this.sizeLength=0;
-                this.m.length=cm;
-                this.m.width=0;
-                this.m.height=0;
-            }
-            this.sizeLength++;
-        },
-
-        saveHistory(){
-            let date = new Date();
-            this.$$history.store({
-                "type": "Measurement",
-                "date": parseInt(parseInt(date.getMonth())+1)+"/"+date.getDate()+" "+date.getHours()+":"+date.getMinutes(),
-                "data": {
-                    "0": {
-                        "position": [0,0,0],
-                        "size": [this.m.length, this.m.width, this.m.height]
-                    }
-                }
-            });
-
-            this.loading=true;
-
-            this.$router.push({ name: "BuildScene" ,query:{ 
-				length: this.m.length,
-				width: this.m.width,
-				height: this.m.height
-			}});
-        },
-
         // learned from three.js doc https://threejs.org/docs/#manual/en/introduction/How-to-update-things
         updateLine(matrix){
             // get reticle position
@@ -232,10 +187,32 @@ export default {
                     let preDistance = this.pointList[0].distanceTo(this.pointList[1]);
                     let distance = preDistance * 100;
                     distance = distance.toFixed(1);
-                    this.storeSize(distance);
+
+                    // calculate line vector
+                    let lineVector = new THREE.Vector3().subVectors(this.pointList[0], this.pointList[1]);
+                    this.vectorList.push(lineVector);
+
+                    // store distance
+                    this.distanceList.push(distance);
+
+                    // calculate degree
+                    if(this.distanceList.length==2){
+                        let rad = this.vectorList[0].angleTo(this.vectorList[1]);
+                        this.angle = (180 - THREE.Math.radToDeg(rad).toFixed(1)).toFixed(1);
+                        this.vectorList = [];
+                    }
+
+                    if(this.distanceList.length>2){
+                        this.distanceList=[];
+                        this.distanceList.push(distance);
+                    }
                     
                     this.pointList = [];
                     this.line = null;
+
+                    if(this.distanceList.length<2){
+                        this.onSelect();
+                    }
                 } else {
                     // draw new line (at this time the line is just a point)
                     let material = new THREE.LineBasicMaterial({ linewidth: 4, color: 0x5dbff2 });
@@ -244,10 +221,9 @@ export default {
 
                     // remove old lines
                     if(this.scene.children.length > 7){
-                        this.scene.children.pop();
-                        this.scene.children.pop();
-                        this.scene.children.pop();
+                        this.scene.children.splice(5,2);
                     }
+
                     // add line
                     this.scene.add(this.line);
                 }
@@ -325,13 +301,6 @@ a-scene {
 
 #info-card{
     width: 50%;
-    transform: rotate(90deg);
-    opacity: 0.7;
-}
-
-#exit-scene{
-    bottom: 0;
-    right: 0;
     transform: rotate(90deg);
     opacity: 0.7;
 }

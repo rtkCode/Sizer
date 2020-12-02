@@ -9,6 +9,7 @@
             <b-navbar-nav>
                 <b-nav-item href="#" class="text-center text-white"><router-link to="/modelling">Modelling</router-link></b-nav-item>
                 <b-nav-item href="#" class="text-center text-white"><router-link to="/measurement">Measurement</router-link></b-nav-item>
+                <b-nav-item href="#" class="text-center text-white"><router-link to="/angle">Angle</router-link></b-nav-item>
             </b-navbar-nav>
 
             <b-navbar-nav class="ml-auto"></b-navbar-nav>

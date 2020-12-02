@@ -1,6 +1,6 @@
 const global = {}
 
-global.size = 9; // cm
+global.size = 8; // cm
 
 global.adjustHeight = function(){
     let clientHeight = document.documentElement.clientHeight;

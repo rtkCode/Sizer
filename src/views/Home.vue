@@ -13,6 +13,10 @@
 				<b-button :disabled="loading2" size="lg" class="cos-bg-lightblue cos-color-gray border-0 w-100" @click="route2('Measurement')">Measurement</b-button>
 			</b-overlay>
 
+			<b-overlay :show="loading3" rounded opacity="0.6" spinner-small spinner-variant="secondary" class="d-inline-block home-button mt-3">
+				<b-button :disabled="loading3" size="lg" class="cos-bg-lightblue cos-color-gray border-0 w-100" @click="route3('Angle')">Angle</b-button>
+			</b-overlay>
+
 		</div>
 		<div class="ruler reverse"></div>
 	</div>
@@ -26,6 +30,7 @@ export default {
 		return{
 			loading1: false,
 			loading2: false,
+			loading3: false,
 		}
 	},
 
@@ -41,6 +46,11 @@ export default {
 
 		route2(name){
 			this.loading2=true;
+			this.$router.push({ name: name});
+		},
+
+		route3(name){
+			this.loading3=true;
 			this.$router.push({ name: name});
 		}
   	}
